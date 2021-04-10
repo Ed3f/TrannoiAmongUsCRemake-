@@ -3,27 +3,24 @@
 #include "gamelib.h"
 #include <time.h>
 #include <string.h>
-Giocatore*player;
-Stanza*lista_stanze;
-Stanza*inizio_stanza;
-static void crea_stanza(void);
-static void crea_giocatori(int n_personaggi);
-static void scelta_giocatori( int n_personaggi);
-static void colori(int personaggi);
-static void select_impostore_astronauta(int n_personaggi);
-static void stampa_giocatori(int n_personaggi);
-static int  probabilita (int n_personaggi);
-static void  esegui_quest(void);
-static void avanza(void);
-static void destra(void);
-static void sinistra(void);
-static void usa_botola(void);
-static int chiamata_emergenza(void);
-static void uccidi_astronauta(void);
-//static int tipologia_stanza(void);
-unsigned short  quest_da_finire;
+Giocatore*player;                                                                  //puntatore  a struct Giocatore
+Stanza*lista_stanze;                                                               //
+Stanza*inizio_stanza;                                                              //puntatore a struct Stanza
+unsigned short  quest_da_finire;                                                   // variabile che indica le quest da finire per terminare il gico;
 int n_personaggi;
-int flag = 0;
+int turnop;                                                                            // variabile che rachiude il numero dei giocatori
+static void stanza_principale(void);                                                     // crea la stanza iniziale
+static void crea_giocatori(int n_personaggi);                                      // crea i giocatori necessari per giocare;
+static void scelta_giocatori( int n_personaggi);                                   // assegna nomi diversi hai giocatori
+static void colori(int personaggi);                                                // visualizza i nomi dei giocatori
+static void select_impostore_astronauta(int n_personaggi);                         // sceglie se un giocatore sarà astronauta o impostore
+static void stampa_giocatori(int n_personaggi);                                    // stampa nome  ruolo e posizione del giocatore
+static int  probabilita (int n_personaggi);                                        // funzione che calcola la probabilità del numero di impostori
+static void inizializzazione_stanza(Stanza*new_stanza);                                    // determina il tipo di una stanza
+static void stanze(int type);                                                      // stampa il tipo della stanza creata
+static void avanza(void);
+static int esegui_quest(int quest_da_finire);
+static void sabotaggio (void);
 void imposta_gioco(){
   time_t t;
   srand((unsigned) time(&t));
@@ -36,7 +33,8 @@ void imposta_gioco(){
           case 4 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -44,7 +42,8 @@ void imposta_gioco(){
           case 5 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -52,7 +51,8 @@ void imposta_gioco(){
           case 6 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -60,7 +60,8 @@ void imposta_gioco(){
           case 7 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -68,7 +69,8 @@ void imposta_gioco(){
           case 8 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -76,7 +78,8 @@ void imposta_gioco(){
           case 9 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -84,7 +87,8 @@ void imposta_gioco(){
          case 10 :
                   printf("inserisci il numero di quest necessarie a terminare la partita\n");
                   scanf(" %hd",&quest_da_finire);
-                  crea_stanza();
+                  crea_giocatori(n_personaggi);
+                  stanza_principale();
                   scelta_giocatori(n_personaggi);
                   select_impostore_astronauta(n_personaggi);
                   stampa_giocatori( n_personaggi);
@@ -100,127 +104,131 @@ void imposta_gioco(){
                 }
               }
               while( n_personaggi < 4);
-              for(int i = 0; i < n_personaggi; i++){
-                inizio_stanza[i].ptr_avanti = NULL;
-                inizio_stanza[i].ptr_destra = NULL;
-                inizio_stanza[i].ptr_sinistra = NULL;
-                inizio_stanza[i].ptr_stanza_precendente = NULL;
-              }
-            if (flag == 0){
-                printf("Prima di giocare si deve impostare il gioco!!\n");
-                imposta_gioco();
-              }
               }
 void gioco (){
-  int turno;
+  time_t t;
+  srand((unsigned) time(&t));
+  int turno = 1;
+  int n_impostori = 0;
+  int n_astronauti = 0;
   int scelta;
-  int chiamata_eme = 0;
-  do{
     for (int i = 0; i < n_personaggi; i++){
       int temp = player[i].colore;
       int random = rand() % n_personaggi;
-       player[i].colore = player[random].colore;
-       player[random].colore = temp;
+      player[i].colore = player[random].colore;
+      player[random].colore = temp;
     }
-  for (int i = 0; i < n_personaggi; i++){
-    printf("il primo giocatore a giocare è %d",player[i].colore);
-    if (player[i].stato == 1){
-      printf("\n+----------------------------------------------------------------------------+\n");
-     printf("|                        %d° GIOCATORE                                       |\n", player[i].colore);
-     printf("+----------------------------------------------------------------------------+\n");
-     while (getchar() != '\n');
-     printf("\n");
-     do {
-     printf("scelga un opzione delle seguenti\n");
-     printf("1)premere 1 per avanzare\n 2) premere 2 per avanzare a sinistra\n 3) premere 3 per avanzare a destra\n 4) premere 4 per eseguire una chiamata d'emergenza\n 5) premere 5 per eseguire una quest\n");
-     printf(" 6)premere 6 per uccidere un astronauta\n 7) premere 7 per sabotare la nave\n");
-     scanf("%d",&scelta);
-      switch(scelta){
-        case 1:
-              avanza();
-              break;
-        case 2:
-              destra();
-              break;
-        case 3:
-              sinistra();
-              break;
-        case 4:
-              if (chimata_eme == 0){
-                chimata_eme = chiamata_emergenza();
-                break;
-              }
-              if (chimata_eme == 1){
-              printf("la chiamata d' emergenza può essere fatta una sola volta\n");
-              break;
-            }
-        case 5:
-              usa_botola();
-              break;
-        case 6:
-              uccidi_astronauta();
-              break;
-        case 7:
-              sabotaggio();
-              break;
-        default:
-                printf("input non valido\n Riprova\n");
+    for (int i = 0; i < n_personaggi; i++){
+      player[i].posizione = lista_stanze;
+      if (player[i].stato == 1){
+        n_impostori++;
       }
-      while (scelta != 7);
+      if(player[i].stato == 0){
+        n_astronauti++;
+      }
+    }
+    printf("n_impostori = %d e n_astronauti = %d", n_impostori, n_astronauti);
+   do{
+    for (int i = 0; i < n_personaggi; i++){
+      if ( player[i].stato == 1){
+        printf("è il %d° turno\n", turno);
+        printf ("è il turno del giocatore %d", player[i].colore);
+        turnop = i;
+        colori(player[i].colore);
+        stanze(lista_stanze -> tipo_stanza);
+        int player_attuale;
+        player_attuale = player[i].colore ;
+        for (int i = 0; i < n_personaggi; i++){
+          if (player[i].posizione == player[i+1].posizione){
+            if (player[i+1].colore != player_attuale){
+            colori(player[i+1].colore);
+          }
+          }
+        }
+        printf("scelga un opzione delle seguenti\n");
+        printf("1)premere 1 per avanzare\n  2) premere 2 per eseguire una chiamata d'emergenza\n 3) premere 3 per usare la botola\n");
+        printf(" 4)premere 4 per uccidere un astronauta\n 5) premere 5 per sabotare la nave\n");
+        scanf("%d", &scelta);
+        switch (scelta) {
+          case 1:
+                avanza();
+                break;
+          case 2:
+              /*  if (player[i].posizione -> chiamata_emergenza == 0){
+                  chiamata_emergenza();
+                  break;
+                }
+                if (player[i].posizione -> chiamata_emergenza == 1){
+                printf("la chiamata d' emergenza può essere fatta una sola volta\n");
+                break;
+              }*/
+          case 3:
+              printf("usa_botola\n");
+                break;
+          case 4:
+                  sabotaggio();
+                break;
+          case 5:
+
+                break;
+          default:
+                  printf("input non valido\n Riprova\n");
+        }
+        }
+      if (player[i].stato == 0){
+          printf("è il %d° turno\n", turno);
+            turnop = i ;
+          printf("è il turno del giocatore %d", player[i].colore);
+          colori(player[i].colore);
+          stanze(inizio_stanza -> tipo_stanza);
+          int player_attuale;
+          player_attuale = player[i].colore ;
+          for (int i = 0; i < n_personaggi; i++){
+          }
+          printf("scelga un opzione delle seguenti\n");
+          printf(" 1)premere 1 per avanzare\n 2) premere 2 per eseguire una chiamata d'emergenza\n 3) premere 3 per eseguire una quest\n");
+          scanf("%d", &scelta);
+        switch(scelta){
+          case 1:
+                avanza();
+                break;
+          case 2:
+                printf("chiamata_emergenza\n");
+            /*  if (player[i].posizione -> chiamata_emergenza == 0){
+                  chiamata_emergenza();
+                  break;
+                }
+                if (player[i].posizione -> chiamata_emergenza == 1){
+                  printf("la chiamata d' emergenza può essere fatta una sola volta\n");
+                  break;
+                }*/
+          case 3:
+                  quest_da_finire = esegui_quest(quest_da_finire);
+                  break;
+          default:
+                  printf("input non valido\n Riprova\n");
+        }
+      }
+      turno++;
     }
   }
-  if (player[i].stato == 0){
-    printf("\n+----------------------------------------------------------------------------+\n");
-   printf("|                        %d° GIOCATORE                                       |\n", player[i].colore);
-   printf("+----------------------------------------------------------------------------+\n");
-   while (getchar() != '\n');
-   printf("\n");
-   do {
-   printf("scelga un opzione delle seguenti\n");
-   printf(" 1)premere 1 per avanzare\n 2) premere 2 per avanzare a sinistra\n 3) premere 3 per avanzare a destra\n 4) premere 4 per eseguire una chiamata d'emergenza\n 5) premere 5 per eseguire una quest\n");
-   scanf("%d",&scelta);
-    switch(scelta){
-      case 1:
-            avanza();
-            break;
-      case 2:
-            destra();
-            break;
-      case 3:
-            sinistra();
-            break;
-      case 4:
-            if (chimata_eme == 0){
-              chimata_eme = chiamata_emergenza();
-              break;
-            }
-            if (chimata_eme == 1){
-              printf("la chiamata d' emergenza può essere fatta una sola volta\n");
-              break;
-            }
-      case 5:
-            esegui_quest();
-            break;
-      default:
-              printf("input non valido\n Riprova\n");
-    }
-    while (scelta != 5);
-    }
- }
- }
- }
+  while(quest_da_finire != 0 || n_impostori != 0 || n_astronauti != 0);
 }
 void termina_gioco(){
   printf("termina");
 }
-static void crea_stanza(void){
+static void stanza_principale(void){
   inizio_stanza = (Stanza*) malloc (sizeof (Stanza));
+  inizio_stanza -> ptr_avanti = NULL;
+  inizio_stanza -> ptr_destra = NULL;
+  inizio_stanza -> ptr_sinistra = NULL;
+  inizio_stanza -> ptr_stanza_precendente = NULL;
+  inizio_stanza -> tipo_stanza = 0;
 }
 static void crea_giocatori(int n_personaggi){
   player = (Giocatore*)malloc(n_personaggi* sizeof(Giocatore));
 }
 static void scelta_giocatori(int n_personaggi){
-  crea_giocatori(n_personaggi);
   //printf("%d", n_personaggi);
   int personaggi[n_personaggi];
   for (int i = 0; i < n_personaggi; i++){
@@ -364,47 +372,118 @@ static void stampa_giocatori(int n_personaggi){
  }
 
  printf("le quest da finire sono %d\n", quest_da_finire);
- flag = 1;
 }
-/*static int tipologia_stanza(void){
-  int t_stanza;
-  t_stanza = rand() % 100;
-      if (t_stanza <= 15){
-        Stanza.tipo_stanza = 3;
-        return(Stanza.tipo_stanza);
-      }
-      if (t_stanza > 15 && t_stanza <= 40){
-          Stanza.tipo_stanza = 4;
-          return(Stanza.tipo_stanza);
-      }
-      if (t_stanza > 40 && t_stanza <= 70){
-          Stanza.tipo_stanza = 2;
-          return(Stanza.tipo_stanza);
+static void stanze(int type){
+  switch (type) {
+    case 0 :
+          printf("Stanza Vuota\n");
+          break;
+    case 1 :
+          printf("In questa stanza c'è una Quest Semplice\n");
+          break;
+    case 2 :
+          printf("In questa stanza c'è una Quest Complessa\n");
+          break;
+    case 3 :
+          printf("In questa stanza c'è una Botola\n");
+          break;
     }
-      if (t_stanza > 70 && t_stanza <= 100){
-          Stanza.tipo_stanza = 1;
-          return(Stanza.tipo_stanza);
-        }
- }
-*/
-static void  esegui_quest(void){
-  printf("esegui quest\n");
 }
 static void avanza(void){
-  printf("vai  avanti\n");
+  int scelta;
+  Stanza *new_stanza;
+  printf("bene ha scelto di avanzare\n");
+  printf("ora indichi in quale posizione\n");
+  printf("premi 1) per andare dritto\n 2) per avanzare a sinistra\n 3) per avanzare a destra\n");
+  scanf("%d", &scelta);
+  switch (scelta) {
+    case 1:
+          printf("ha scelto di andare dritto\n");
+          lista_stanze = player[turnop].posizione-> ptr_avanti;
+          if (lista_stanze -> ptr_avanti == NULL){
+            lista_stanze -> ptr_avanti = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza (lista_stanze -> ptr_avanti);
+            player[turnop].posizione = lista_stanze -> ptr_avanti;
+        }
+        else{
+          player[turnop].posizione = lista_stanze -> ptr_avanti;
+        }
+          break;
+    case 2:
+          lista_stanze = player[turnop].posizione-> ptr_sinistra;
+          printf("ha scelto di andare a sinistra\n");
+          if (lista_stanze -> ptr_sinistra == NULL){
+            lista_stanze -> ptr_sinistra  = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza (lista_stanze -> ptr_avanti);
+            player[turnop].posizione = lista_stanze -> ptr_sinistra;
+        }
+        else{
+          player[turnop].posizione = lista_stanze -> ptr_sinistra;
+      }
+        }
+          break;
+   case 3:
+        lista_stanze = player[turnop].posizione-> ptr_destra;
+         printf("ha scelto di andare a destra\n");
+         if (lista_stanze -> ptr_destra == NULL){
+            lista_stanze -> ptr_destra = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza (lista_stanze -> ptr_avanti);
+            player[turnop].posizione = lista_stanze -> ptr_destra;
+       }
+       else{
+           player[turnop].posizione = lista_stanze -> ptr_destra;
+       }
+         break;
+    default :
+          printf("input non valido\n");
+  }
 }
-static void destra(void){
-  printf("vai a destra\n");
+void inizializzazione_stanza(Stanza* new_stanza){
+  new_stanza -> ptr_avanti = NULL;
+  new_stanza -> ptr_destra = NULL;
+  new_stanza -> ptr_sinistra = NULL;
+  lista_stanze =new_stanza;
+  time_t t;
+  srand((unsigned) time(&t));
+  int type_room;
+  type_room = rand() % 100;
+  if (type_room >= 15){
+    new_stanza -> tipo_stanza = 2;
+    stanze(new_stanza -> tipo_stanza);
+  }
+  if (type_room > 15 && type_room >= 40){
+    new_stanza -> tipo_stanza = 3;
+    stanze(new_stanza -> tipo_stanza);
+  }
+  if (type_room > 40 && type_room >= 70){
+    new_stanza -> tipo_stanza = 0;
+    stanze(new_stanza -> tipo_stanza);
+  }
+  if (type_room > 70 && type_room <= 100){
+    new_stanza -> tipo_stanza = 1;
+    stanze(new_stanza -> tipo_stanza);
+  }
+
 }
-static void sinistra(void){
-  printf("vai a sinistra\n");
+static int esegui_quest(int quest_da_finire){
+  if ( player[turnop].posizione -> tipo_stanza == 2){
+     quest_da_finire = quest_da_finire - 2;
+     printf("Quest da completare = %d", quest_da_finire);
+  }
+  if ( player[turnop].posizione -> tipo_stanza == 1){
+     quest_da_finire = quest_da_finire - 1;
+     printf("Quest da completare = %d", quest_da_finire);
+  }
+  if (quest_da_finire == 0){
+    printf("Game Over!!\n");
+    printf("Vittoria Astronauti\n");
+  }
+  }
+  return(quest_da_finire);
 }
-static void usa_botola(void){
-  printf("usa botola\n");
-}
-static int chiamata_emergenza(void){
-  return(1);
-}
-static void uccidi_astronauta(void){
-  printf("ucciso\n");
+static void sabotaggio(void){
+    if (player[turnop].posizione -> tipo_stanza == 1 ||  player[turnop].posizione -> tipo_stanza  == 2 ){
+        player[turnop].posizione -> tipo_stanza = 0;
+      printf("quest eliminata\n");
+    }
 }
