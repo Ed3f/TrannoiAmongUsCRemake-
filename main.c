@@ -25,6 +25,7 @@ int main(){
     switch(scelta){
       case 1:
           imposta_gioco();
+          flag = 1;
           break;
       case 2 :
       if (flag == 1){

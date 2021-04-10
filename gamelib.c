@@ -112,6 +112,7 @@ void gioco (){
   int n_impostori = 0;
   int n_astronauti = 0;
   int scelta;
+  lista_stanze = inizio_stanza;
     for (int i = 0; i < n_personaggi; i++){
       int temp = player[i].colore;
       int random = rand() % n_personaggi;
@@ -120,6 +121,7 @@ void gioco (){
     }
     for (int i = 0; i < n_personaggi; i++){
       player[i].posizione = lista_stanze;
+      printf("posizione dei giocatori %p\n",player[i].posizione);
       if (player[i].stato == 1){
         n_impostori++;
       }
@@ -138,10 +140,10 @@ void gioco (){
         stanze(lista_stanze -> tipo_stanza);
         int player_attuale;
         player_attuale = player[i].colore ;
-        for (int i = 0; i < n_personaggi; i++){
-          if (player[i].posizione == player[i+1].posizione){
-            if (player[i+1].colore != player_attuale){
-            colori(player[i+1].colore);
+        for (int j = 0; j < n_personaggi; j++){
+          if (player[j].posizione == player[j+1].posizione){
+            if (player[j+1].colore != player_attuale){
+            colori(player[j+1].colore);
           }
           }
         }
@@ -183,6 +185,13 @@ void gioco (){
           stanze(inizio_stanza -> tipo_stanza);
           int player_attuale;
           player_attuale = player[i].colore ;
+          for (int j = 0; j < n_personaggi; j++){
+            if (player[j].posizione == player[j+1].posizione){
+              if (player[j+1].colore != player_attuale){
+              colori(player[j+1].colore);
+            }
+            }
+          }
           for (int i = 0; i < n_personaggi; i++){
           }
           printf("scelga un opzione delle seguenti\n");
@@ -391,60 +400,63 @@ static void stanze(int type){
 }
 static void avanza(void){
   int scelta;
-  Stanza *new_stanza;
+  Stanza* new_stanza;
   printf("bene ha scelto di avanzare\n");
   printf("ora indichi in quale posizione\n");
   printf("premi 1) per andare dritto\n 2) per avanzare a sinistra\n 3) per avanzare a destra\n");
   scanf("%d", &scelta);
   switch (scelta) {
     case 1:
+          printf("il player si trova = %p\n", new_stanza);
           printf("ha scelto di andare dritto\n");
-          lista_stanze = player[turnop].posizione-> ptr_avanti;
-          if (lista_stanze -> ptr_avanti == NULL){
-            lista_stanze -> ptr_avanti = (Stanza*) malloc(sizeof (Stanza));
-            inizializzazione_stanza (lista_stanze -> ptr_avanti);
-            player[turnop].posizione = lista_stanze -> ptr_avanti;
+          lista_stanze  = player[turnop].posizione ;
+          if (new_stanza == NULL){
+             new_stanza = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza (new_stanza);
+            player[turnop].posizione  = new_stanza;
+              printf("il  player ora si trova = %p\n", player[turnop].posizione-> ptr_avanti);
         }
         else{
-          player[turnop].posizione = lista_stanze -> ptr_avanti;
+          player[turnop].posizione = new_stanza;
+          printf("il  player ora si trova = %p\n", player[turnop].posizione -> ptr_avanti);
         }
           break;
     case 2:
-          lista_stanze = player[turnop].posizione-> ptr_sinistra;
+    printf("1\n");
           printf("ha scelto di andare a sinistra\n");
+          lista_stanze -> ptr_sinistra = player[turnop].posizione-> ptr_sinistra;
           if (lista_stanze -> ptr_sinistra == NULL){
-            lista_stanze -> ptr_sinistra  = (Stanza*) malloc(sizeof (Stanza));
-            inizializzazione_stanza (lista_stanze -> ptr_avanti);
-            player[turnop].posizione = lista_stanze -> ptr_sinistra;
+             new_stanza = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza ( new_stanza );
+             player[turnop].posizione -> ptr_sinistra = lista_stanze -> ptr_sinistra;
         }
         else{
-          player[turnop].posizione = lista_stanze -> ptr_sinistra;
+          player[turnop].posizione -> ptr_sinistra = lista_stanze -> ptr_sinistra;
       }
-        }
           break;
    case 3:
-        lista_stanze = player[turnop].posizione-> ptr_destra;
-         printf("ha scelto di andare a destra\n");
+          printf("ha scelto di andare a destra\n");
+          lista_stanze -> ptr_destra = player[turnop].posizione-> ptr_destra;
          if (lista_stanze -> ptr_destra == NULL){
-            lista_stanze -> ptr_destra = (Stanza*) malloc(sizeof (Stanza));
-            inizializzazione_stanza (lista_stanze -> ptr_avanti);
-            player[turnop].posizione = lista_stanze -> ptr_destra;
+             new_stanza  = (Stanza*) malloc(sizeof (Stanza));
+            inizializzazione_stanza ( new_stanza );
+            player[turnop].posizione -> ptr_destra = lista_stanze -> ptr_destra;
        }
        else{
-           player[turnop].posizione = lista_stanze -> ptr_destra;
+           player[turnop].posizione -> ptr_destra = lista_stanze -> ptr_destra;
        }
          break;
     default :
           printf("input non valido\n");
   }
 }
-void inizializzazione_stanza(Stanza* new_stanza){
+void inizializzazione_stanza(  Stanza* new_stanza){
+  time_t t;
+  srand((unsigned) time(&t));
   new_stanza -> ptr_avanti = NULL;
   new_stanza -> ptr_destra = NULL;
   new_stanza -> ptr_sinistra = NULL;
-  lista_stanze =new_stanza;
-  time_t t;
-  srand((unsigned) time(&t));
+  new_stanza -> ptr_stanza_precendente = lista_stanze -> ptr_avanti;
   int type_room;
   type_room = rand() % 100;
   if (type_room >= 15){
@@ -478,9 +490,8 @@ static int esegui_quest(int quest_da_finire){
     printf("Game Over!!\n");
     printf("Vittoria Astronauti\n");
   }
+    return(quest_da_finire);
   }
-  return(quest_da_finire);
-}
 static void sabotaggio(void){
     if (player[turnop].posizione -> tipo_stanza == 1 ||  player[turnop].posizione -> tipo_stanza  == 2 ){
         player[turnop].posizione -> tipo_stanza = 0;
