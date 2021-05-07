@@ -3,11 +3,13 @@
 #include "gamelib.h"
 #include <time.h>
 int main(){
-  int scelta = 3;
+  int scelta = 0;
   int flag = 0;
   printf("\nBenvenuto in...");
-    while (getchar() != '\n');
-  printf("  #  Trannoi   #   \n");
+  while (getchar() != '\n');
+  printf("█─▄─▄─█▄─▄▄▀██▀▄─██▄─▀█▄─▄█▄─▀█▄─▄█─▄▄─█▄─▄█\n");
+  printf("███─████─▄─▄██─▀─███─█▄▀─███─█▄▀─██─██─██─██\n");
+  printf("▀▀▄▄▄▀▀▄▄▀▄▄▀▄▄▀▄▄▀▄▄▄▀▀▄▄▀▄▄▄▀▀▄▄▀▄▄▄▄▀▄▄▄▀\n");
   while (getchar() != '\n');
   printf(" \n");
   printf("Un gruppo di Astronauti si trova in viagggio sull' astronave Skelt,\n il loro obbiettivo è il mantenimento della nave per arrivare a destinazione.\n tra di loro però ci sono anche degli impostori,\n ");
@@ -32,7 +34,8 @@ int main(){
           gioco();
         }
         else {
-          printf("prima devi impostare il gico\n");
+          printf("Attenzione\n");
+          printf("Prima deve impostare il gioco, per giocare\n");
           break;
         }
           break;
@@ -40,8 +43,10 @@ int main(){
           termina_gioco();
           break;
       default :
-          printf ("input non valido\n");
+      if (scelta == 0){
+          printf ("Attenzione, il valore digitato non è corretto");
           break;
+        }
    }
  }
   while(scelta != 3);
