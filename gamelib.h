@@ -11,6 +11,7 @@ typedef struct {
   Stanza* posizione;
   enum stato_giocatore  { astronauta, impostore, defenestrato, assassinato}stato;
   enum nome_giocatore   {rosso, verde, blu, nero, bianco, viola, marrone, arancione, rosa, giallo}colore;
+  int voto;
 }Giocatore;
 void termina_gioco(void);
 void gioco(void);
