@@ -6,6 +6,7 @@ int main(){
   int scelta = 0;
   int flag = 0;
   printf("\nBenvenuto in...");
+  printf("\npremere invio per continuare\n");
   while (getchar() != '\n');
 
 printf("████████╗██████╗░░█████╗░███╗░░██╗███╗░░██╗░█████╗░██╗\n");
